@@ -1,0 +1,99 @@
+Learning Objectives:-
+Create a yaml file containing the pod spec for the nginx pod.
+Create the pod.
+
+
+Your company is getting ready to launch a new website, and they need you to set up an nginx web server in their Kubernetes cluster. The nginx server will need to be accessible via network in the future, so you will need to expose port 80 as a containerPort for the nginx container. Your team has also asked you to ensure that nginx runs in quiet mode for the time being to cut down on unnecessary log output. You can do this by setting the command to nginx and passing the following arg to the container: -g daemon off; -q. As this nginx server belongs to the Web team, you will need to create it in the team's web namespace.
+
+To summarize:
+
+Use the nginx container image.
+The container needs a containerPort of 80.
+Set the command to nginx
+Pass in the -g daemon off; -q args to run nginx in quiet mode.
+Create the pod in the web namespace.
+Once the pod is created, you should be able to find it with kubectl get pods -n web. Once the pod is created, you can get more information about its current status with kubectl describe pod nginx -n web.
+
+=======================================================================================================================================================================
+# Create a pod with nginx as base image,exposing port 80
+$ vi nginxpod.yml
+
+apiVersion : v1
+kind: Pod
+metadata: 
+   name: nginxpod
+   labels:
+    app: nginx-app
+spec:
+  containers:
+   - name: nginx-contr
+     image: nginx:latest
+     command: ['nginx','-g','daemon off;','-q'] 
+     ports:
+       - containerPort: 80 
+
+#create namespace called web for nginxpod
+$ kubectl create ns web
+namespace/web created
+
+#create pod in the namespace called web
+$ kubectl create -f nginxpod.yml -n web
+pod/nginxpod created
+# Kubectl apply -f nginxpod.yml -n web --- will update file if not will create one
+
+#describe details of nginx taht is created
+$ kubectl describe pod nginxpod -n web
+Name:         nginxpod
+Namespace:    web
+Priority:     0
+Node:         node01/172.17.0.59
+Start Time:   Mon, 01 Jun 2020 06:36:05 +0000
+Labels:       app=nginx-app
+Annotations:  kubectl.kubernetes.io/last-applied-configuration:
+                {"apiVersion":"v1","kind":"Pod","metadata":{"annotations":{},"labels":{"app":"nginx-app"},"name":"nginxpod","namespace":"web"},"spec":{"co...
+Status:       Running
+IP:           10.44.0.2
+IPs:
+  IP:  10.44.0.2
+Containers:
+  nginx-contr:
+    Container ID:  docker://14af311813a06bd77e5ef3b76bca10ea9f4495755ea2f219bbe752a116e76ba4
+    Image:         nginx:latest
+    Image ID:      docker-pullable://nginx@sha256:6fff55753e3b34e36e24e37039ee9eae1fe38a6420d8ae16ef37c92d1eb26699
+    Port:          80/TCP
+    Host Port:     0/TCP
+    Command:
+      nginx
+      -g
+      daemon off;
+      -q
+    State:          Running
+      Started:      Mon, 01 Jun 2020 06:36:08 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-7lctl (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  default-token-7lctl:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-7lctl
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute for 300s
+                 node.kubernetes.io/unreachable:NoExecute for 300s
+Events:
+  Type    Reason     Age        From               Message
+  ----    ------     ----       ----               -------
+  Normal  Scheduled  <unknown>  default-scheduler  Successfully assigned web/nginxpod to node01
+  Normal  Pulling    23s        kubelet, node01    Pulling image "nginx:latest"
+  Normal  Pulled     22s        kubelet, node01    Successfully pulled image "nginx:latest"
+  Normal  Created    22s        kubelet, node01    Created container nginx-contr
+  Normal  Started    21s        kubelet, node01    Started container nginx-contr
